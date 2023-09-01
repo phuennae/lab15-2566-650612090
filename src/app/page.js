@@ -31,6 +31,7 @@ const schema = z
       .string()
       .min(3, { message: "Last name must have at least 3 characters" }),
     email: z.string().email({ message: "Invalid email format" }),
+
     plan: z.enum(["funrun", "mini", "half", "full"], {
       errorMap: (issue, ctx) => ({ message: "Please select a plan" }),
     }),
@@ -44,9 +45,22 @@ const schema = z
     }),
     hasCoupon: z.boolean(),
     coupon: z.string(),
-    password: z.string(),
+    password: z
+      .string()
+      .min(6, { message: "Password must contain at least 6 characters" })
+      .max(12, { message: "Password must not exceed 12 characters" }),
     confirmPassword: z.string(),
   })
+  .refine(
+    (data) => {
+      if (data.confirmPassword === data.password) return true;
+      return false;
+    },
+    {
+      message: "Password does not match",
+      path: ["confirmPassword"],
+    }
+  )
   .refine(
     //refine let you check error in your own way
     //in this example, we check "hasCoupon" with "coupon" fields
@@ -92,9 +106,13 @@ export default function Home() {
     if (form.values.plan === "funrun") price = 500;
     //check the rest plans by yourself
     //TIP : check /src/app/libs/runningPlans.js
+    if (form.values.plan === "mini") price = 800;
+    if (form.values.plan === "half") price = 1200;
+    if (form.values.plan === "full") price = 1500;
 
     //check discount here
-
+    if (form.values.hasCoupon === true && form.values.coupon === "CMU2023")
+      price = price * 0.7;
     return price;
   };
 
@@ -175,7 +193,11 @@ export default function Home() {
           </Stack>
         </form>
 
-        <Footer year={2023} fullName="Chayanin Suatap" studentId="650610560" />
+        <Footer
+          year={2023}
+          fullName="Phuenpa Champasri"
+          studentId="650612090"
+        />
       </Container>
 
       <TermsAndCondsModal opened={opened} close={close} />
